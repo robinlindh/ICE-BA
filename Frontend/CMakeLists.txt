@@ -69,6 +69,8 @@ target_include_directories(OF PUBLIC
     ${GFLAGS_INCLUDE_DIR}
     ${OpenCV_INCLUDE_DIR}
     ${YAMLCPP_INCLUDE_DIR}
+    /Users/robin/Documents/GitHub/brisk/include
+    /Users/robin/Documents/GitHub/brisk/agast/include
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/cameras
 )
@@ -77,5 +79,5 @@ target_link_libraries(OF
     ${OpenCV_LIBS}
     ${YAMLCPP_LIBRARIES}
     IBA
-    glog
+    /opt/homebrew/Cellar/glog/0.6.0/lib/libglog.dylib
 )

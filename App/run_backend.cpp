@@ -28,7 +28,7 @@
 #include "ViewerIBA.h"
 #endif
 
-#include <gtest/gtest.h>
+//#include <gtest/gtest.h>
 #ifndef WIN32
 #include <glog/logging.h>
 #include <gflags/gflags.h>
@@ -42,6 +42,7 @@
 #endif
 #include <string>
 #include <vector>
+#include <iostream>
 
 bool RunSolver(const Configurator &cfgor, const InputSequence &IS, const std::string param = "",
                IBA::Time *tLBA = NULL, IBA::Time *tGBA = NULL

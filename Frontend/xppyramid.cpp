@@ -86,12 +86,12 @@ void calcSharrDeriv(const cv::Mat& src, cv::Mat* dst) {
   CHECK_EQ(depth, CV_8U);
   CHECK_NOTNULL(dst->data);
   CHECK_EQ(dst->channels(), 2);  // x and y gradient
-  CHECK_EQ(dst->depth(), DataType<deriv_type>::depth);
+  CHECK_EQ(dst->depth(), cv::DataType<deriv_type>::depth);
 #endif
 
-  int x, y, delta = static_cast<int>(alignSize((cols + 2)*cn, 16));
-  AutoBuffer<deriv_type> _tempBuf(delta * 2 + 64);
-  deriv_type *trow0 = alignPtr(_tempBuf + cn, 16), *trow1 = alignPtr(trow0 + delta, 16);
+  int x, y, delta = static_cast<int>(cv::alignSize((cols + 2)*cn, 16));
+  cv::AutoBuffer<deriv_type> _tempBuf(delta * 2 + 64);
+  deriv_type *trow0 = cv::alignPtr(_tempBuf + cn, 16), *trow1 = cv::alignPtr(trow0 + delta, 16);
 
 #if CV_SSE2
   __m128i z = _mm_setzero_si128(), c3 = _mm_set1_epi16(3), c10 = _mm_set1_epi16(10);
@@ -203,11 +203,11 @@ void calcSharrDeriv(const cv::Mat& src, cv::Mat* dst) {
 }
 
 XPTrackerInvoker::XPTrackerInvoker(
-    const Mat& _prevImg, const Mat& _prevDeriv, const Mat& _nextImg,
+    const cv::Mat& _prevImg, const cv::Mat& _prevDeriv, const cv::Mat& _nextImg,
     std::vector<XPKeyPoint>* _prevPts,
-    std::vector<Point2f>* _nextPts,
+    std::vector<cv::Point2f>* _nextPts,
     std::vector<bool>* _status, std::vector<float>* _err,
-    Size _winSize, TermCriteria _criteria,
+    cv::Size _winSize, cv::TermCriteria _criteria,
     int _level, int _maxLevel, int _start_level,
     int _flags, float _minEigThreshold) {
   prevImg = &_prevImg;
@@ -234,12 +234,12 @@ typedef float acctype;
 typedef float itemtype;
 #endif
 
-void XPTrackerInvoker::compute_covariance_matrix_and_update_patch(const Point2i& iprevPt,
+void XPTrackerInvoker::compute_covariance_matrix_and_update_patch(const cv::Point2i& iprevPt,
                                                                   const InterpolationParam& inter_param,
                                                                   cv::Mat* IWinBuf, cv::Mat* derivIWinBuf,
                                                                   float* const A_ptr) const {
-  const Mat& I = *prevImg;
-  const Mat& derivI = *prevDeriv;
+  const cv::Mat& I = *prevImg;
+  const cv::Mat& derivI = *prevDeriv;
 
 #if CV_SSE2
   __m128i qw0 = _mm_set1_epi32(inter_param.iw00 + (inter_param.iw01 << 16));
@@ -414,24 +414,24 @@ void XPTrackerInvoker::compute_covariance_matrix_and_update_patch(const Point2i&
 }
 
 
-void XPTrackerInvoker::operator()(const Range& range) const {
-  const Point2f halfWin((winSize.width - 1) * 0.5f, (winSize.height - 1) * 0.5f);
-  const Point2i halfWini(3, 3);
+void XPTrackerInvoker::operator()(const cv::Range& range) const {
+  const cv::Point2f halfWin((winSize.width - 1) * 0.5f, (winSize.height - 1) * 0.5f);
+  const cv::Point2i halfWini(3, 3);
   const cv::Size iter_cache_size(15, 15);
   const cv::Point2i half_diff(iter_cache_size.width / 2 - halfWini.x,
                               iter_cache_size.height / 2 - halfWin.y);
-  const Mat& I = *prevImg;
-  const Mat& J = *nextImg;
-  const Mat& derivI = *prevDeriv;
+  const cv::Mat& I = *prevImg;
+  const cv::Mat& J = *nextImg;
+  const cv::Mat& derivI = *prevDeriv;
   const std::vector<XPKeyPoint>& prevPts = *m_prevPts;
   const int W_BITS = 14;
   const float FLT_SCALE = 1.f / (1 << 20);
-  std::vector<Point2f>& nextPts = *m_nextPts;
+  std::vector<cv::Point2f>& nextPts = *m_nextPts;
   std::vector<bool>& status = *m_status;
   std::vector<float>& err = *m_err;
 
   int j, cn = I.channels(), cn2 = cn*2;
-  int derivDepth = DataType<deriv_type>::depth;
+  int derivDepth = cv::DataType<deriv_type>::depth;
   int Jcols = J.cols, Jrows = J.rows;
 #ifdef _XP_OPTICAL_FLOW_DEBUG_MODE_
   CHECK_EQ(derivI.cols, Jcols);
@@ -442,13 +442,13 @@ void XPTrackerInvoker::operator()(const Range& range) const {
 
   cv::Rect valid_region(half_diff.x, half_diff.y,
                         Jcols - iter_cache_size.width, Jrows - iter_cache_size.height);
-  const bool get_min_eigenvals = (flags & OPTFLOW_LK_GET_MIN_EIGENVALS) != 0;
-  cv::Mat J_patch(iter_cache_size, CV_MAKETYPE(DataType<uchar>::depth, 1),
+  const bool get_min_eigenvals = (flags & cv::OPTFLOW_LK_GET_MIN_EIGENVALS) != 0;
+  cv::Mat J_patch(iter_cache_size, CV_MAKETYPE(cv::DataType<uchar>::depth, 1),
                   iteration_patch_buffer.get());
   __builtin_prefetch(J_patch.data, 1, 3);
   for (int ptidx = range.start; ptidx < range.end; ++ptidx) {
-    Point2f prevPt = prevPts[ptidx].pt * static_cast<float>(1. / (1 << (level - start_level)));
-    Point2f nextPt;
+    cv::Point2f prevPt = prevPts[ptidx].pt * static_cast<float>(1. / (1 << (level - start_level)));
+    cv::Point2f nextPt;
     if (level == maxLevel) {
       if (flags & cv::OPTFLOW_USE_INITIAL_FLOW)
         nextPt = nextPts[ptidx] * static_cast<float>(1. / (1 << (level - start_level)));
@@ -462,7 +462,7 @@ void XPTrackerInvoker::operator()(const Range& range) const {
     DBG_XP_PYRAMID("ft_id: " << prevPts[ptidx].class_id << " cur level = " << level);
     DBG_XP_PYRAMID("prevPt = " << prevPt << " nextPt = " << nextPt);
 
-    Point2i iprevPt, inextPt;
+    cv::Point2i iprevPt, inextPt;
     prevPt -= halfWin;
     iprevPt.x = cvFloor(prevPt.x);
     iprevPt.y = cvFloor(prevPt.y);
@@ -507,9 +507,9 @@ void XPTrackerInvoker::operator()(const Range& range) const {
     XPKeyPointRepo* kp_repo =
         &(prevPts[ptidx].keypoint_repo->pyramids[level]);
 
-    Mat IWinBuf(winSize, CV_MAKETYPE(derivDepth, cn), kp_repo->patch);
+    cv::Mat IWinBuf(winSize, CV_MAKETYPE(derivDepth, cn), kp_repo->patch);
 
-    Mat derivIWinBuf(winSize, CV_MAKETYPE(derivDepth, cn2), kp_repo->xy_gradient);
+    cv::Mat derivIWinBuf(winSize, CV_MAKETYPE(derivDepth, cn2), kp_repo->xy_gradient);
     // to decide whether to recompute convariance matrix
     if (prevPts[ptidx].need_to_update_repo) {
       compute_covariance_matrix_and_update_patch(iprevPt,
@@ -538,8 +538,8 @@ void XPTrackerInvoker::operator()(const Range& range) const {
     float D = kp_repo->covariance_maxtrix[4];
 
     nextPt -= halfWin;
-    Point2f prevDelta;
-    Point2i init_pos;
+    cv::Point2f prevDelta;
+    cv::Point2i init_pos;
 
     init_pos.x = cvFloor(nextPt.x);
     init_pos.y = cvFloor(nextPt.y);
@@ -558,7 +558,7 @@ void XPTrackerInvoker::operator()(const Range& range) const {
       }
       // compute the current optical flow in pixels
       // this info will be used to decide whether update the cached buffer.
-      Point2i off = inextPt - init_pos;
+      cv::Point2i off = inextPt - init_pos;
 
       if (std::abs(off.x) > half_diff.x ||
           std::abs(off.y) > half_diff.y ||
@@ -722,7 +722,7 @@ void XPTrackerInvoker::operator()(const Range& range) const {
       b1 = ib1 * FLT_SCALE;
       b2 = ib2 * FLT_SCALE;
 
-      Point2f delta((A12 * b2 - A22 * b1) * D,
+      cv::Point2f delta((A12 * b2 - A22 * b1) * D,
                     (A12 * b1 - A11 * b2) * D);
       //  delta = -delta;
       nextPt += delta;
@@ -747,9 +747,9 @@ void XPTrackerInvoker::operator()(const Range& range) const {
     }
 
     if (status[ptidx] && level == start_level &&
-        (flags & OPTFLOW_LK_GET_MIN_EIGENVALS) == 0) {
-      Point2f nextPoint = nextPts[ptidx] - halfWin;
-      Point inextPoint;
+        (flags & cv::OPTFLOW_LK_GET_MIN_EIGENVALS) == 0) {
+      cv::Point2f nextPoint = nextPts[ptidx] - halfWin;
+      cv::Point inextPoint;
 
       inextPoint.x = cvFloor(nextPoint.x);
       inextPoint.y = cvFloor(nextPoint.y);
@@ -788,13 +788,13 @@ void XPTrackerInvoker::operator()(const Range& range) const {
 void XPcalcOpticalFlowPyrLK(const std::vector<cv::Mat>& _prevPyramids,
                             const std::vector<cv::Mat>& _nextPyramids,
                             std::vector<XPKeyPoint>* _prevPts,
-                            std::vector<Point2f>* _nextPts,
+                            std::vector<cv::Point2f>* _nextPts,
                             std::vector<bool>* _status,
                             std::vector<float>* _err,
                             const cv::Size _win_size,
                             int _max_level,
                             int _start_level,
-                            TermCriteria _criteria,
+                            cv::TermCriteria _criteria,
                             int _flags, double _minEigThreshold) {
 #ifdef _XP_OPTICAL_FLOW_DEBUG_MODE_
   CHECK_EQ(_win_size.width, 7) << "only support window size 7 for now";
@@ -822,11 +822,11 @@ void XPcalcOpticalFlowPyrLK(const std::vector<cv::Mat>& _prevPyramids,
     status[i] = true;
   }
 
-  if ((_criteria.type & TermCriteria::COUNT) == 0)
+  if ((_criteria.type & cv::TermCriteria::COUNT) == 0)
     _criteria.maxCount = 30;
   else
     _criteria.maxCount = std::min(std::max(_criteria.maxCount, 0), 100);
-  if ((_criteria.type & TermCriteria::EPS) == 0)
+  if ((_criteria.type & cv::TermCriteria::EPS) == 0)
     _criteria.epsilon = 0.01;
   else
     _criteria.epsilon = std::min(std::max(_criteria.epsilon, 0.), 10.);
@@ -834,8 +834,8 @@ void XPcalcOpticalFlowPyrLK(const std::vector<cv::Mat>& _prevPyramids,
 
   for (level = _max_level; level >= _start_level; --level) {
     // compute deriv images
-    Size imgSize = _prevPyramids[level].size();
-    Mat derivI(imgSize.height, imgSize.width, CV_MAKETYPE(DataType<deriv_type>::depth, 2),
+    cv::Size imgSize = _prevPyramids[level].size();
+    cv::Mat derivI(imgSize.height, imgSize.width, CV_MAKETYPE(cv::DataType<deriv_type>::depth, 2),
                xy_gradient_buffer_prev.get());
     calcSharrDeriv(_prevPyramids[level], &derivI);
 
@@ -845,7 +845,7 @@ void XPcalcOpticalFlowPyrLK(const std::vector<cv::Mat>& _prevPyramids,
                      _nextPyramids[level], _prevPts, _nextPts,
                      _status, _err,
                      _win_size, _criteria, level, _max_level, _start_level,
-                     _flags, static_cast<float>(_minEigThreshold)).operator ()(Range(0, npoints));
+                     _flags, static_cast<float>(_minEigThreshold)).operator ()(cv::Range(0, npoints));
   }
 }
 }  // namespace XP_OPTICAL_FLOW

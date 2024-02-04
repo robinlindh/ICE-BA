@@ -16,8 +16,8 @@
 #ifndef XP_INCLUDE_XP_UTIL_FEATURE_UTILS_H_
 #define XP_INCLUDE_XP_UTIL_FEATURE_UTILS_H_
 
-#include "ORBextractor.h"
 #include "param.h"
+#include "ORBextractor.h"
 #include "cameras/PinholeCamera.hpp"  // for vio::cameras::CameraBase
 #include <glog/logging.h>
 #include <opencv2/video/tracking.hpp>

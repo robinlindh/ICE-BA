@@ -21,7 +21,7 @@
 #include <boost/pool/object_pool.hpp>
 #include <vector>
 #include <memory>
-using namespace cv;  //NOLINT
+//using namespace cv;  //NOLINT
 
 namespace XP {
 namespace XP_OPTICAL_FLOW {
@@ -127,29 +127,29 @@ struct XPKeyPoint : public cv::KeyPoint {
 void XPcalcOpticalFlowPyrLK(const std::vector<cv::Mat>& _prevPyramids,
                             const std::vector<cv::Mat>& _nextPyramids,
                             std::vector<XPKeyPoint>* _prevPts,
-                            std::vector<Point2f>* _nextPts,
+                            std::vector<cv::Point2f>* _nextPts,
                             std::vector<bool>* _status,
                             std::vector<float>* _err,
                             const cv::Size _win_size = cv::Size(7, 7),
                             int _max_level = 3,
                             int _start_level = 0,
-                            TermCriteria _criteria =
-                            TermCriteria(TermCriteria::COUNT +
-                                TermCriteria::EPS, 30, 0.01),
+                            cv::TermCriteria _criteria =
+                            cv::TermCriteria(cv::TermCriteria::COUNT +
+                                cv::TermCriteria::EPS, 30, 0.01),
                             int _flags = 0, double _minEigThreshold = 1e-4);
 
 
 
 typedef struct XPTrackerInvoker {
-  XPTrackerInvoker(const Mat& _prevImg,
-                   const Mat& _prevDeriv,
-                   const Mat& _nextImg,
+  XPTrackerInvoker(const cv::Mat& _prevImg,
+                   const cv::Mat& _prevDeriv,
+                   const cv::Mat& _nextImg,
                    std::vector<XPKeyPoint>* _prevPts,
-                   std::vector<Point2f>* _nextPts,
+                   std::vector<cv::Point2f>* _nextPts,
                    std::vector<bool>* _status,
                    std::vector<float>* _err,
-                   Size _winSize,
-                   TermCriteria _criteria,
+                   cv::Size _winSize,
+                   cv::TermCriteria _criteria,
                    int _level,
                    int _maxLevel,
                    int _start_level,
@@ -169,7 +169,7 @@ typedef struct XPTrackerInvoker {
   }
 
   // Invoke optical flow by operator()
-  void operator()(const Range& range) const;
+  void operator()(const cv::Range& range) const;
   /*********************************************************************
    * compute covariance matrix and update patch to corresponding keypoint
    * @param[in]  iprevPt      keypoint position
@@ -179,22 +179,22 @@ typedef struct XPTrackerInvoker {
    * @param[in]  A_ptr        start address of covariance matrix in patch
    */
   void compute_covariance_matrix_and_update_patch(
-      const Point2i& iprevPt,
+      const cv::Point2i& iprevPt,
       const InterpolationParam& inter_param,
       cv::Mat* IWinBuf,
       cv::Mat* derivIWinBuf,
       float* const A_ptr) const;
 
-  const Mat* prevImg;
-  const Mat* nextImg;
-  const Mat* prevDeriv;
+  const cv::Mat* prevImg;
+  const cv::Mat* nextImg;
+  const cv::Mat* prevDeriv;
   std::vector<XPKeyPoint>* m_prevPts;
-  std::vector<Point2f>* m_nextPts;
+  std::vector<cv::Point2f>* m_nextPts;
   std::vector<bool>* m_status;
   std::vector<float>* m_err;
 
-  Size winSize;
-  TermCriteria criteria;
+  cv::Size winSize;
+  cv::TermCriteria criteria;
   int level;
   int maxLevel;
   int start_level;
